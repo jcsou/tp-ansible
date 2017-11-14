@@ -1,0 +1,33 @@
+# roles/haproxy/tasks/main.yml
+#---     
+- name: install HAProxy
+  package:
+    name: haproxy
+
+- name: allow service to start
+  lineinfile:
+    dest: /etc/default/haproxy
+    regexp: ENABLED=.*
+    line: ENABLED=1
+
+- name: debug var hostvars
+  debug:
+    var: hostvars[groups['app-servers'][0]]['ansible_default_ipv4']['address']
+
+- name: Install config file
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  notify:
+  - reload haproxy service
+  
+- name: start/enable HAProxy
+  service:
+    name: haproxy
+    enabled: true
+    state: started
+
+- name: include tests
+  include_tasks: tests.yml
+  tags: tests
+
